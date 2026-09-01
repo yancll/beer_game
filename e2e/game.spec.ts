@@ -8,7 +8,8 @@ test.beforeEach(async ({ page }) => {
 async function setRange(locator: import('@playwright/test').Locator, value: number) {
   await locator.evaluate((element, nextValue) => {
     const input = element as HTMLInputElement;
-    input.value = String(nextValue);
+    const valueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+    valueSetter?.call(input, String(nextValue));
     input.dispatchEvent(new Event('input', { bubbles: true }));
     input.dispatchEvent(new Event('change', { bubbles: true }));
   }, value);
