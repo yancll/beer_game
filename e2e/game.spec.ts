@@ -17,6 +17,7 @@ async function setRange(locator: import('@playwright/test').Locator, value: numb
 
 test('adds, updates and automatically removes a winner', async ({ page }) => {
   await expect(page.getByText('La carrera está lista')).toBeVisible();
+  await expect(page.getByLabel('Cantidad de abejas')).toHaveAttribute('max', '5');
   await page.getByLabel('Nombre').fill('Ana');
   await page.getByRole('button', { name: /^3, Fuego/ }).click();
   await setRange(page.getByLabel('Cantidad de abejas'), 3);

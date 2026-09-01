@@ -77,14 +77,14 @@ describe('participant operations', () => {
   it('updates a participant without changing its identity or creation time', () => {
     const result = upsertParticipant(
       [existing],
-      { ...draft, beeCount: 7, intelligence: 5 },
+      { ...draft, beeCount: 5, intelligence: 5 },
       existing.id,
     );
-    expect(result[0]).toMatchObject({ id: existing.id, createdAt: 100, beeCount: 7, intelligence: 5 });
+    expect(result[0]).toMatchObject({ id: existing.id, createdAt: 100, beeCount: 5, intelligence: 5 });
   });
 
   it('throws when bypassing validation with an invalid draft', () => {
-    expect(() => upsertParticipant([], { ...draft, beeCount: 11 })).toThrow('Invalid participant draft');
+    expect(() => upsertParticipant([], { ...draft, beeCount: 6 })).toThrow('Invalid participant draft');
   });
 
   it('removes only the requested winner', () => {
@@ -94,6 +94,11 @@ describe('participant operations', () => {
 });
 
 describe('stored participants', () => {
+  it('migrates previously saved colonies above the new maximum down to five bees', () => {
+    const overloaded = { ...existing, beeCount: 10 };
+    expect(parseStoredParticipants(JSON.stringify([overloaded]))[0]?.beeCount).toBe(5);
+  });
+
   it('loads valid records and discards invalid or duplicate records', () => {
     const stored = JSON.stringify([
       existing,

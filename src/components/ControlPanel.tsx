@@ -1,14 +1,15 @@
 import { useMemo, useState } from 'react';
 import { EMOJI_SLOTS } from '../domain/emojiSlots';
-import { validateParticipantDraft } from '../domain/participants';
+import { MAX_BEES_PER_PARTICIPANT, validateParticipantDraft } from '../domain/participants';
 import type { Participant, ParticipantDraft } from '../domain/types';
 
 interface ControlPanelProps {
   participants: readonly Participant[];
   flowerMoveSeconds: number;
+  editingId?: string;
   onFlowerMoveSecondsChange: (seconds: number) => void;
+  onEditingChange: (participantId?: string) => void;
   onSave: (draft: ParticipantDraft, editingId?: string) => void;
-  onRemove: (participantId: string) => void;
 }
 
 const DEFAULT_COLOR = '#f2a51f';
@@ -32,15 +33,23 @@ function emptyDraft(participants: readonly Participant[], reservedSlot?: number)
 export function ControlPanel({
   participants,
   flowerMoveSeconds,
+  editingId,
   onFlowerMoveSecondsChange,
+  onEditingChange,
   onSave,
-  onRemove,
 }: ControlPanelProps) {
-  const [editingId, setEditingId] = useState<string>();
-  const [draft, setDraft] = useState<ParticipantDraft>(() => emptyDraft(participants));
-  const [submitted, setSubmitted] = useState(false);
   const editingParticipant = participants.find((participant) => participant.id === editingId);
   const activeEditingId = editingParticipant ? editingId : undefined;
+  const [draft, setDraft] = useState<ParticipantDraft>(() =>
+    editingParticipant ? {
+      name: editingParticipant.name,
+      color: editingParticipant.color,
+      emojiSlot: editingParticipant.emojiSlot,
+      beeCount: editingParticipant.beeCount,
+      intelligence: editingParticipant.intelligence,
+    } : emptyDraft(participants),
+  );
+  const [submitted, setSubmitted] = useState(false);
 
   const validation = useMemo(
     () => validateParticipantDraft(draft, participants, activeEditingId),
@@ -48,20 +57,8 @@ export function ControlPanel({
   );
 
   const reset = (reservedSlot?: number) => {
-    setEditingId(undefined);
+    onEditingChange(undefined);
     setDraft(emptyDraft(participants, reservedSlot));
-    setSubmitted(false);
-  };
-
-  const edit = (participant: Participant) => {
-    setEditingId(participant.id);
-    setDraft({
-      name: participant.name,
-      color: participant.color,
-      emojiSlot: participant.emojiSlot,
-      beeCount: participant.beeCount,
-      intelligence: participant.intelligence,
-    });
     setSubmitted(false);
   };
 
@@ -154,7 +151,7 @@ export function ControlPanel({
           className="range-input"
           type="range"
           min="1"
-          max="10"
+          max={MAX_BEES_PER_PARTICIPANT}
           value={draft.beeCount}
           onChange={(event) =>
             setDraft((current) => ({ ...current, beeCount: Number(event.target.value) }))
@@ -191,67 +188,6 @@ export function ControlPanel({
           )}
         </div>
       </form>
-
-      <div className="active-participants">
-        <h3>Identidades y configuración</h3>
-        <p className="identity-note">Cada número conserva su emoji, nombre y configuración.</p>
-        <div className="participant-list identity-list">
-          {EMOJI_SLOTS.map((slot) => {
-            const participant = participants.find((current) => current.emojiSlot === slot.number);
-            return (
-              <div
-                className="participant-row identity-row"
-                data-assigned={participant ? 'true' : 'false'}
-                key={slot.number}
-              >
-                {participant ? (
-                  <>
-                    <button
-                      className="participant-edit identity-edit"
-                      type="button"
-                      aria-label={`Editar a ${participant.name}`}
-                      onClick={() => edit(participant)}
-                    >
-                      <span className="identity-number">{slot.number}</span>
-                      <span
-                        className="participant-color"
-                        style={{ backgroundColor: participant.color }}
-                        aria-hidden="true"
-                      />
-                      <span className="participant-row-emoji" aria-hidden="true">{slot.emoji}</span>
-                      <span>
-                        <strong className="roster-name">{participant.name}</strong>
-                        <small>{participant.beeCount} abejas · inteligencia {participant.intelligence}</small>
-                      </span>
-                    </button>
-                    <button
-                      className="remove-button"
-                      type="button"
-                      aria-label={`Retirar a ${participant.name}`}
-                      onClick={() => onRemove(participant.id)}
-                    >
-                      ×
-                    </button>
-                  </>
-                ) : (
-                  <div
-                    className="identity-empty-row"
-                    aria-label={`${slot.number}, ${slot.label}, disponible`}
-                  >
-                    <span className="identity-number">{slot.number}</span>
-                    <span className="identity-available-dot" aria-hidden="true" />
-                    <span className="participant-row-emoji" aria-hidden="true">{slot.emoji}</span>
-                    <span>
-                      <strong>Disponible</strong>
-                      <small>{slot.label}</small>
-                    </span>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
 
       <div className="round-settings">
         <label className="range-heading" htmlFor="flower-time">

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ControlPanel } from './components/ControlPanel';
 import { EmptyArena } from './components/EmptyArena';
+import { IdentityPanel } from './components/IdentityPanel';
 import { VictoryOverlay } from './components/VictoryOverlay';
 import { resolveWinner } from './domain/gameRound';
 import { REFERENCE_EXPERT_BEE_COUNT } from './domain/raceBalance';
@@ -26,6 +27,7 @@ export function App() {
     parseStoredParticipants(localStorage.getItem(PARTICIPANTS_STORAGE_KEY)),
   );
   const [flowerMoveSeconds, setFlowerMoveSeconds] = useState(loadFlowerMoveSeconds);
+  const [editingId, setEditingId] = useState<string>();
   const [winner, setWinner] = useState<Winner | null>(null);
   const [paused, setPaused] = useState(false);
   const participantsRef = useRef(participants);
@@ -53,6 +55,7 @@ export function App() {
   };
 
   const retireParticipant = (participantId: string) => {
+    setEditingId((current) => (current === participantId ? undefined : current));
     setParticipants((current) => removeParticipant(current, participantId));
   };
 
@@ -63,6 +66,7 @@ export function App() {
     winnerLockRef.current = true;
     setWinner(resolution.winner);
     setPaused(true);
+    setEditingId((current) => (current === participantId ? undefined : current));
     setParticipants(resolution.remainingParticipants);
 
     if (victoryTimerRef.current) window.clearTimeout(victoryTimerRef.current);
@@ -103,10 +107,18 @@ export function App() {
 
       <main className="workspace-grid">
         <ControlPanel
+          key={editingId ?? 'new-participant'}
           participants={participants}
           flowerMoveSeconds={flowerMoveSeconds}
+          editingId={editingId}
           onFlowerMoveSecondsChange={setFlowerMoveSeconds}
+          onEditingChange={setEditingId}
           onSave={saveParticipant}
+        />
+
+        <IdentityPanel
+          participants={participants}
+          onEdit={setEditingId}
           onRemove={retireParticipant}
         />
 
@@ -133,7 +145,7 @@ export function App() {
             <span><i className="footer-dot flower-dot" />La flor cambia cada {flowerMoveSeconds} segundos</span>
             <span>
               <i className="footer-dot brain-dot" />
-              Equilibrada para ~5–10 min incluso con {REFERENCE_EXPERT_BEE_COUNT} abejas expertas
+              Equilibrada para ~3–6 min con el máximo de {REFERENCE_EXPERT_BEE_COUNT} abejas expertas
             </span>
           </div>
         </section>

@@ -7,6 +7,7 @@ export interface ParticipantValidation {
 }
 
 const HEX_COLOR = /^#[0-9a-f]{6}$/i;
+export const MAX_BEES_PER_PARTICIPANT = 5;
 
 export function validateParticipantDraft(
   draft: ParticipantDraft,
@@ -36,8 +37,12 @@ export function validateParticipantDraft(
   );
   if (occupiedSlot) errors.emojiSlot = 'Ese emoji ya está asignado.';
 
-  if (!Number.isInteger(draft.beeCount) || draft.beeCount < 1 || draft.beeCount > 10) {
-    errors.beeCount = 'La cantidad debe estar entre 1 y 10.';
+  if (
+    !Number.isInteger(draft.beeCount) ||
+    draft.beeCount < 1 ||
+    draft.beeCount > MAX_BEES_PER_PARTICIPANT
+  ) {
+    errors.beeCount = `La cantidad debe estar entre 1 y ${MAX_BEES_PER_PARTICIPANT}.`;
   }
   if (!Number.isInteger(draft.intelligence) || draft.intelligence < 0 || draft.intelligence > 5) {
     errors.intelligence = 'La inteligencia debe estar entre 0 y 5.';
@@ -91,7 +96,7 @@ export function parseStoredParticipants(raw: string | null): Participant[] {
         name: typeof item.name === 'string' ? item.name : '',
         color: typeof item.color === 'string' ? item.color : '',
         emojiSlot: Number(item.emojiSlot),
-        beeCount: Number(item.beeCount),
+        beeCount: Math.min(Number(item.beeCount), MAX_BEES_PER_PARTICIPANT),
         intelligence: Number(item.intelligence),
       };
       const id = typeof item.id === 'string' ? item.id : '';
