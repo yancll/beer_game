@@ -193,7 +193,7 @@ export function ControlPanel({
       </form>
 
       <div className="active-participants">
-        <h3>Participantes e identidades</h3>
+        <h3>Identidades y configuración</h3>
         <p className="identity-note">Cada número conserva su emoji, nombre y configuración.</p>
         <div className="participant-list identity-list">
           {EMOJI_SLOTS.map((slot) => {
