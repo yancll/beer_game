@@ -102,19 +102,19 @@ button:focus-visible, input:focus-visible {
 
 .workspace-grid {
   display: grid;
-  grid-template-columns: 300px minmax(620px, 1fr) 220px;
+  grid-template-columns: 300px minmax(620px, 1fr);
   gap: 16px;
   align-items: start;
 }
 
-.control-panel, .arena-panel, .emoji-roster {
+.control-panel, .arena-panel {
   border: 1px solid var(--line);
   border-radius: 24px;
   background: rgba(255, 253, 247, 0.92);
   box-shadow: var(--shadow);
 }
 
-.control-panel, .emoji-roster { padding: 20px; }
+.control-panel { padding: 20px; }
 .panel-heading {
   display: flex;
   align-items: center;
@@ -205,6 +205,30 @@ button:focus-visible, input:focus-visible {
   cursor: pointer;
 }
 .participant-edit:hover { background: #f0f5eb; }
+.identity-note { margin: -3px 0 10px; color: var(--muted); font-size: 0.68rem; line-height: 1.4; }
+.identity-list { gap: 5px; }
+.identity-row {
+  min-height: 46px;
+  padding: 2px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: #f6f5ed;
+}
+.identity-row[data-assigned='true'] { border-color: rgba(61, 125, 73, 0.18); background: #eef5e8; }
+.identity-edit { grid-template-columns: 22px 8px 27px minmax(0, 1fr); width: 100%; }
+.identity-number { color: var(--muted); font-size: 0.68rem; font-weight: 700; text-align: center; }
+.identity-empty-row {
+  display: grid;
+  grid-template-columns: 22px 8px 27px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 7px;
+}
+.identity-empty-row strong, .identity-empty-row small { display: block; }
+.identity-empty-row strong { color: var(--muted); font-size: 0.76rem; }
+.identity-empty-row small { color: #96a197; font-size: 0.64rem; }
+.identity-available-dot { width: 8px; height: 24px; border-radius: 99px; background: rgba(24, 51, 33, 0.11); }
 .participant-color { width: 8px; height: 31px; border-radius: 99px; }
 .participant-row-emoji { font-size: 1.15rem; }
 .participant-edit strong, .participant-edit small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -299,30 +323,10 @@ button:focus-visible, input:focus-visible {
 .flower-dot { background: var(--honey); }
 .brain-dot { background: var(--leaf); }
 
-.roster-heading { margin-bottom: 12px; }
-.roster-list { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
-.roster-row {
-  display: grid;
-  grid-template-columns: 23px 34px minmax(0, 1fr);
-  align-items: center;
-  min-height: 48px;
-  padding: 6px 8px;
-  border: 1px solid transparent;
-  border-radius: 12px;
-  background: #f6f5ed;
-}
-.roster-row[data-assigned='true'] { border-color: rgba(61, 125, 73, 0.18); background: #eef5e8; }
-.roster-number { color: var(--muted); font-size: 0.7rem; font-weight: 700; }
-.roster-emoji { font-size: 1.4rem; }
-.roster-name { display: flex; min-width: 0; align-items: center; gap: 6px; overflow: hidden; font-size: 0.78rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
-.roster-color { flex: 0 0 auto; width: 7px; height: 22px; border-radius: 99px; }
-.roster-empty { height: 1px; }
-.roster-note { margin: 14px 2px 0; color: var(--muted); font-size: 0.69rem; line-height: 1.4; }
+.roster-name { display: block; }
 
 @media (max-width: 1240px) {
   .workspace-grid { grid-template-columns: 300px minmax(480px, 1fr); }
-  .emoji-roster { grid-column: 1; }
-  .arena-panel { grid-column: 2; grid-row: 1 / span 2; }
 }
 
 @media (max-width: 860px) {
@@ -331,12 +335,10 @@ button:focus-visible, input:focus-visible {
   .header-stats { grid-column: 1 / -1; }
   .header-stats div { flex: 1; }
   .workspace-grid { grid-template-columns: 1fr; }
-  .control-panel, .arena-panel, .emoji-roster { grid-column: 1; grid-row: auto; }
+  .control-panel, .arena-panel { grid-column: 1; grid-row: auto; }
   .arena-panel { grid-row: 1; }
   .control-panel { grid-row: 2; }
-  .emoji-roster { grid-row: 3; }
   .game-frame { height: 620px; }
-  .roster-list { grid-template-columns: 1fr 1fr; }
 }
 
 @media (max-width: 520px) {
@@ -345,12 +347,11 @@ button:focus-visible, input:focus-visible {
   .brand-mark { width: 50px; height: 50px; border-radius: 15px; }
   .brand-mark span { font-size: 25px; }
   .brand-copy p { display: none; }
-  .control-panel, .arena-panel, .emoji-roster { border-radius: 18px; }
+  .control-panel, .arena-panel { border-radius: 18px; }
   .arena-panel { padding: 9px; }
   .arena-heading { grid-template-columns: 1fr; }
   .arena-heading h2, .arena-heading p { grid-column: 1; grid-row: auto; }
   .game-frame { height: 560px; border-radius: 14px; }
-  .roster-list { grid-template-columns: 1fr; }
   .victory-card { padding-inline: 18px; }
 }
 

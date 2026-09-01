@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { EMOJI_SLOTS, getEmojiSlot } from '../domain/emojiSlots';
+import { EMOJI_SLOTS } from '../domain/emojiSlots';
 import { validateParticipantDraft } from '../domain/participants';
 import type { Participant, ParticipantDraft } from '../domain/types';
 
@@ -192,40 +192,66 @@ export function ControlPanel({
         </div>
       </form>
 
-      {participants.length > 0 && (
-        <div className="active-participants">
-          <h3>En competencia</h3>
-          <div className="participant-list">
-            {participants.map((participant) => {
-              const slot = getEmojiSlot(participant.emojiSlot);
-              return (
-                <div className="participant-row" key={participant.id}>
-                  <button className="participant-edit" type="button" onClick={() => edit(participant)}>
-                    <span
-                      className="participant-color"
-                      style={{ backgroundColor: participant.color }}
-                      aria-hidden="true"
-                    />
-                    <span className="participant-row-emoji" aria-hidden="true">{slot?.emoji}</span>
-                    <span>
-                      <strong>{participant.name}</strong>
-                      <small>{participant.beeCount} abejas · inteligencia {participant.intelligence}</small>
-                    </span>
-                  </button>
-                  <button
-                    className="remove-button"
-                    type="button"
-                    aria-label={`Retirar a ${participant.name}`}
-                    onClick={() => onRemove(participant.id)}
+      <div className="active-participants">
+        <h3>Participantes e identidades</h3>
+        <p className="identity-note">Cada número conserva su emoji, nombre y configuración.</p>
+        <div className="participant-list identity-list">
+          {EMOJI_SLOTS.map((slot) => {
+            const participant = participants.find((current) => current.emojiSlot === slot.number);
+            return (
+              <div
+                className="participant-row identity-row"
+                data-assigned={participant ? 'true' : 'false'}
+                key={slot.number}
+              >
+                {participant ? (
+                  <>
+                    <button
+                      className="participant-edit identity-edit"
+                      type="button"
+                      aria-label={`Editar a ${participant.name}`}
+                      onClick={() => edit(participant)}
+                    >
+                      <span className="identity-number">{slot.number}</span>
+                      <span
+                        className="participant-color"
+                        style={{ backgroundColor: participant.color }}
+                        aria-hidden="true"
+                      />
+                      <span className="participant-row-emoji" aria-hidden="true">{slot.emoji}</span>
+                      <span>
+                        <strong className="roster-name">{participant.name}</strong>
+                        <small>{participant.beeCount} abejas · inteligencia {participant.intelligence}</small>
+                      </span>
+                    </button>
+                    <button
+                      className="remove-button"
+                      type="button"
+                      aria-label={`Retirar a ${participant.name}`}
+                      onClick={() => onRemove(participant.id)}
+                    >
+                      ×
+                    </button>
+                  </>
+                ) : (
+                  <div
+                    className="identity-empty-row"
+                    aria-label={`${slot.number}, ${slot.label}, disponible`}
                   >
-                    ×
-                  </button>
-                </div>
-              );
-            })}
-          </div>
+                    <span className="identity-number">{slot.number}</span>
+                    <span className="identity-available-dot" aria-hidden="true" />
+                    <span className="participant-row-emoji" aria-hidden="true">{slot.emoji}</span>
+                    <span>
+                      <strong>Disponible</strong>
+                      <small>{slot.label}</small>
+                    </span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
-      )}
+      </div>
 
       <div className="round-settings">
         <label className="range-heading" htmlFor="flower-time">

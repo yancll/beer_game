@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ControlPanel } from './components/ControlPanel';
-import { EmojiRoster } from './components/EmojiRoster';
 import { EmptyArena } from './components/EmptyArena';
 import { VictoryOverlay } from './components/VictoryOverlay';
 import { resolveWinner } from './domain/gameRound';
@@ -138,8 +137,6 @@ export function App() {
             </span>
           </div>
         </section>
-
-        <EmojiRoster participants={participants} />
       </main>
     </div>
   );
