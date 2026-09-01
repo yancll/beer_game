@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AccessGate } from './components/AccessGate';
 import { ControlPanel } from './components/ControlPanel';
 import { EmptyArena } from './components/EmptyArena';
 import { IdentityPanel } from './components/IdentityPanel';
@@ -15,7 +16,17 @@ import { PhaserGame } from './game/PhaserGame';
 
 const PARTICIPANTS_STORAGE_KEY = 'beer-game:participants:v1';
 const FLOWER_TIME_STORAGE_KEY = 'beer-game:flower-time:v1';
+const ACCESS_SESSION_KEY = 'beer-game:access:v1';
+const ACCESS_CODE = '1992';
 const VICTORY_DURATION_MS = 3200;
+
+function loadAccessState(): boolean {
+  try {
+    return sessionStorage.getItem(ACCESS_SESSION_KEY) === 'granted';
+  } catch {
+    return false;
+  }
+}
 
 function loadFlowerMoveSeconds(): number {
   const stored = Number(localStorage.getItem(FLOWER_TIME_STORAGE_KEY));
@@ -23,6 +34,28 @@ function loadFlowerMoveSeconds(): number {
 }
 
 export function App() {
+  const [hasAccess, setHasAccess] = useState(loadAccessState);
+
+  if (!hasAccess) {
+    return (
+      <AccessGate
+        accessCode={ACCESS_CODE}
+        onUnlock={() => {
+          try {
+            sessionStorage.setItem(ACCESS_SESSION_KEY, 'granted');
+          } catch {
+            // The game can still open when session storage is unavailable.
+          }
+          setHasAccess(true);
+        }}
+      />
+    );
+  }
+
+  return <Game />;
+}
+
+function Game() {
   const [participants, setParticipants] = useState<Participant[]>(() =>
     parseStoredParticipants(localStorage.getItem(PARTICIPANTS_STORAGE_KEY)),
   );

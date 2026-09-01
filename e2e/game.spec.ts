@@ -1,9 +1,18 @@
 import { expect, test } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => localStorage.clear());
   await page.goto('/');
+  await page.evaluate(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+  await page.reload();
 });
+
+async function unlockGame(page: import('@playwright/test').Page) {
+  await page.getByLabel('Código de acceso').fill('1992');
+  await page.getByRole('button', { name: 'Entrar' }).click();
+}
 
 async function setRange(locator: import('@playwright/test').Locator, value: number) {
   await locator.evaluate((element, nextValue) => {
@@ -16,6 +25,7 @@ async function setRange(locator: import('@playwright/test').Locator, value: numb
 }
 
 test('adds, updates and automatically removes a winner', async ({ page }) => {
+  await unlockGame(page);
   await expect(page.getByText('La carrera está lista')).toBeVisible();
   await expect(page.getByLabel('Cantidad de abejas')).toHaveAttribute('max', '5');
   await expect(page.getByText('Selecciona un emoji')).toBeVisible();
@@ -65,6 +75,7 @@ test('adds, updates and automatically removes a winner', async ({ page }) => {
 
 test('keeps all controls usable on a mobile-sized screen', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
+  await unlockGame(page);
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Jardín de competencia' })).toBeVisible();
   await page.getByRole('heading', { name: 'Participantes' }).scrollIntoViewIfNeeded();
@@ -72,4 +83,16 @@ test('keeps all controls usable on a mobile-sized screen', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Añadir participante' })).toBeVisible();
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
   expect(overflow).toBe(false);
+});
+
+test('blocks the game until the correct access code is entered', async ({ page }) => {
+  await expect(page.getByRole('heading', { name: 'Acceso al juego' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Jardín de competencia' })).toHaveCount(0);
+
+  await page.getByLabel('Código de acceso').fill('1111');
+  await page.getByRole('button', { name: 'Entrar' }).click();
+  await expect(page.getByRole('alert')).toContainText('Código incorrecto');
+
+  await unlockGame(page);
+  await expect(page.getByRole('heading', { name: 'Jardín de competencia' })).toBeVisible();
 });

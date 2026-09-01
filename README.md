@@ -4,6 +4,7 @@ Juego web 2D para una sola persona operadora. Desde un panel central se añaden 
 
 ## Reglas implementadas
 
+- El juego solicita el código de acceso `1992` al comenzar una nueva sesión del navegador.
 - Cada participante nuevo comienza con **1 abeja** e inteligencia **0**.
 - Hay 10 emojis únicos disponibles para identificar las colonias, sin números visibles.
 - El emoji aparece encima de todas las abejas del participante.
