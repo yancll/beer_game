@@ -110,3 +110,25 @@ test('aligns the competition panel with the garden on desktop', async ({ page })
   }));
   expect(Math.abs(heights.competition - heights.garden)).toBeLessThanOrEqual(1);
 });
+
+test('maximizes the garden without leaving a laptop viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 768 });
+  await unlockGame(page);
+
+  const layout = await page.evaluate(() => {
+    const arena = document.querySelector('.arena-panel')?.getBoundingClientRect();
+    const frame = document.querySelector('.game-frame')?.getBoundingClientRect();
+    const title = document.querySelector('.arena-heading h2')?.getBoundingClientRect();
+    const description = document.querySelector('.arena-heading p')?.getBoundingClientRect();
+    return {
+      arenaBottom: arena?.bottom ?? Number.POSITIVE_INFINITY,
+      frameWidth: frame?.width ?? 0,
+      titleCenter: title ? title.top + title.height / 2 : 0,
+      descriptionCenter: description ? description.top + description.height / 2 : 100,
+    };
+  });
+
+  expect(layout.arenaBottom).toBeLessThanOrEqual(768);
+  expect(layout.frameWidth).toBeGreaterThan(1000);
+  expect(Math.abs(layout.titleCenter - layout.descriptionCenter)).toBeLessThanOrEqual(2);
+});
