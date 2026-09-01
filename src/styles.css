@@ -191,6 +191,7 @@ button:focus-visible, input:focus-visible {
 }
 
 .control-panel, .identity-panel { padding: 15px; }
+.identity-panel { align-self: stretch; }
 .panel-heading {
   display: flex;
   align-items: center;
@@ -413,6 +414,7 @@ button:focus-visible, input:focus-visible {
   .header-stats div { flex: 1; }
   .workspace-grid { grid-template-columns: 1fr; }
   .control-panel, .identity-panel, .arena-panel { grid-column: 1; grid-row: auto; }
+  .identity-panel { align-self: start; width: 100%; }
   .control-panel { grid-row: 1; }
   .identity-panel { grid-row: 2; }
   .arena-panel { grid-row: 3; }

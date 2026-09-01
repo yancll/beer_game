@@ -1,6 +1,6 @@
 import type { IntelligenceLevel } from './types';
 
-export const REFERENCE_EXPERT_BEE_COUNT = 50;
+export const REFERENCE_EXPERT_BEE_COUNT = 75;
 export const EXPERT_DISCOVERY_MIN_MS = 3 * 60 * 1000;
 export const EXPERT_DISCOVERY_MAX_MS = 5 * 60 * 1000;
 

@@ -13,10 +13,10 @@ describe('race duration balance', () => {
       minMs: EXPERT_DISCOVERY_MIN_MS,
       maxMs: EXPERT_DISCOVERY_MAX_MS,
     });
-    expect(REFERENCE_EXPERT_BEE_COUNT).toBe(50);
+    expect(REFERENCE_EXPERT_BEE_COUNT).toBe(75);
   });
 
-  it('places the expected first discovery for fifty expert bees inside three-to-six minutes', () => {
+  it('places the expected first discovery for seventy-five expert bees inside three-to-six minutes', () => {
     const expectedFirstDiscovery = EXPERT_DISCOVERY_MIN_MS +
       (EXPERT_DISCOVERY_MAX_MS - EXPERT_DISCOVERY_MIN_MS) /
         (REFERENCE_EXPERT_BEE_COUNT + 1);

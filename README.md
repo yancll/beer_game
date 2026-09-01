@@ -6,7 +6,7 @@ Juego web 2D para una sola persona operadora. Desde un panel central se añaden 
 
 - El juego solicita el código de acceso `1992` al comenzar una nueva sesión del navegador.
 - Cada participante nuevo comienza con **1 abeja** e inteligencia **0**.
-- Hay 10 emojis únicos disponibles para identificar las colonias, sin números visibles.
+- Hay 15 emojis únicos disponibles para identificar las colonias, sin números visibles.
 - El emoji aparece encima de todas las abejas del participante.
 - En la lista lateral, los emojis asignados muestran el nombre; los libres no muestran ningún nombre.
 - Todas las abejas de una persona comparten color, emoji y nivel de inteligencia.
@@ -30,7 +30,7 @@ Cuando una exploradora entra en una zona prometedora se convierte temporalmente 
 
 Cada abeja tiene un pequeño genoma de navegación. Cuando la flor cambia de lugar, se puntúan proximidad, progreso de néctar y distancia desperdiciada. Las mejores estrategias se conservan y las restantes mutan hacia una nueva generación. Una colonia de una sola abeja también puede mutar gradualmente.
 
-Con el máximo de 50 abejas expertas, la carrera está calibrada para producir una victoria aproximadamente entre 3 y 6 minutos.
+Con el máximo de 75 abejas expertas, la carrera está calibrada para producir una victoria aproximadamente entre 3 y 6 minutos.
 
 ## Tecnología
 

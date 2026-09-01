@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { EMOJI_SLOTS } from '../domain/emojiSlots';
+import { EMOJI_SLOTS, MAX_PARTICIPANTS } from '../domain/emojiSlots';
 import { MAX_BEES_PER_PARTICIPANT, validateParticipantDraft } from '../domain/participants';
 import type { Participant, ParticipantDraft } from '../domain/types';
 
@@ -79,7 +79,7 @@ export function ControlPanel({
           <h2 id="control-panel-title">Participantes</h2>
         </div>
         <span className="participant-total" aria-label={`${participants.length} participantes activos`}>
-          {participants.length}/10
+          {participants.length}/{MAX_PARTICIPANTS}
         </span>
       </div>
 
@@ -177,7 +177,11 @@ export function ControlPanel({
         </p>
 
         <div className="form-actions">
-          <button className="primary-button" type="submit" disabled={!activeEditingId && participants.length >= 10}>
+          <button
+            className="primary-button"
+            type="submit"
+            disabled={!activeEditingId && participants.length >= MAX_PARTICIPANTS}
+          >
             {activeEditingId ? 'Guardar cambios' : 'Añadir participante'}
           </button>
           {activeEditingId && (

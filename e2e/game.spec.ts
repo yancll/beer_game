@@ -29,6 +29,8 @@ test('adds, updates and automatically removes a winner', async ({ page }) => {
   await expect(page.getByText('La carrera está lista')).toBeVisible();
   await expect(page.getByLabel('Cantidad de abejas')).toHaveAttribute('max', '5');
   await expect(page.getByText('Selecciona un emoji')).toBeVisible();
+  await expect(page.getByLabel('0 participantes activos')).toContainText('0/15');
+  await expect(page.getByRole('button', { name: 'Corona' })).toBeVisible();
   await expect(page.locator('.emoji-choice-number, .identity-number')).toHaveCount(0);
   await page.getByLabel('Nombre').fill('Ana');
   await page.getByRole('button', { name: /^Fuego/ }).click();
@@ -95,4 +97,16 @@ test('blocks the game until the correct access code is entered', async ({ page }
 
   await unlockGame(page);
   await expect(page.getByRole('heading', { name: 'Jardín de competencia' })).toBeVisible();
+});
+
+test('aligns the competition panel with the garden on desktop', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 1000 });
+  await unlockGame(page);
+  await expect(page.locator('.identity-row')).toHaveCount(15);
+
+  const heights = await page.evaluate(() => ({
+    competition: document.querySelector('.identity-panel')?.getBoundingClientRect().height ?? 0,
+    garden: document.querySelector('.arena-panel')?.getBoundingClientRect().height ?? 0,
+  }));
+  expect(Math.abs(heights.competition - heights.garden)).toBeLessThanOrEqual(1);
 });
