@@ -18,8 +18,10 @@ async function setRange(locator: import('@playwright/test').Locator, value: numb
 test('adds, updates and automatically removes a winner', async ({ page }) => {
   await expect(page.getByText('La carrera está lista')).toBeVisible();
   await expect(page.getByLabel('Cantidad de abejas')).toHaveAttribute('max', '5');
+  await expect(page.getByText('Selecciona un emoji')).toBeVisible();
+  await expect(page.locator('.emoji-choice-number, .identity-number')).toHaveCount(0);
   await page.getByLabel('Nombre').fill('Ana');
-  await page.getByRole('button', { name: /^3, Fuego/ }).click();
+  await page.getByRole('button', { name: /^Fuego/ }).click();
   await setRange(page.getByLabel('Cantidad de abejas'), 3);
   await setRange(page.getByLabel('Inteligencia'), 2);
   await page.getByRole('button', { name: 'Añadir participante' }).click();
@@ -35,7 +37,7 @@ test('adds, updates and automatically removes a winner', async ({ page }) => {
   await expect(page.locator('.participant-edit', { hasText: 'Ana' })).toContainText('5 abejas · inteligencia 5');
 
   await page.getByLabel('Nombre').fill('Luis');
-  await page.getByRole('button', { name: /^2, Arcoíris/ }).click();
+  await page.getByRole('button', { name: /^Arcoíris/ }).click();
   await setRange(page.getByLabel('Cantidad de abejas'), 2);
   await setRange(page.getByLabel('Inteligencia'), 4);
   await page.getByRole('button', { name: 'Añadir participante' }).click();

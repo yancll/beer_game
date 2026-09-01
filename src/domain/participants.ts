@@ -29,7 +29,7 @@ export function validateParticipantDraft(
 
   if (!HEX_COLOR.test(draft.color)) errors.color = 'Selecciona un color válido.';
   if (!EMOJI_SLOTS.some((slot) => slot.number === draft.emojiSlot)) {
-    errors.emojiSlot = 'Selecciona un número de emoji.';
+    errors.emojiSlot = 'Selecciona un emoji.';
   }
 
   const occupiedSlot = participants.some(

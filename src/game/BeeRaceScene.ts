@@ -1,4 +1,8 @@
 import Phaser from 'phaser';
+import {
+  selectCollectiveSignal,
+  type CollectiveSignal,
+} from '../domain/collectiveLearning';
 import { getEmojiSlot } from '../domain/emojiSlots';
 import {
   createGenome,
@@ -24,6 +28,7 @@ interface BeeAgent {
   bodyShape: Phaser.GameObjects.Ellipse;
   stripeLeft: Phaser.GameObjects.Rectangle;
   stripeRight: Phaser.GameObjects.Rectangle;
+  signalRing: Phaser.GameObjects.Arc;
   badge: Phaser.GameObjects.Arc;
   icon: Phaser.GameObjects.Text;
   progressTrack: Phaser.GameObjects.Rectangle;
@@ -48,6 +53,7 @@ interface SceneOptions {
 export class BeeRaceScene extends Phaser.Scene {
   private participants = new Map<string, Participant>();
   private colonies = new Map<string, BeeAgent[]>();
+  private collectiveGuides = new Map<string, string>();
   private flower?: Phaser.GameObjects.Container;
   private meadow?: Phaser.GameObjects.Graphics;
   private nextFlowerMoveAt = 0;
@@ -92,6 +98,7 @@ export class BeeRaceScene extends Phaser.Scene {
       if (nextMap.has(participantId)) continue;
       bees.forEach((bee) => bee.root.destroy(true));
       this.colonies.delete(participantId);
+      this.collectiveGuides.delete(participantId);
     }
 
     for (const participant of nextParticipants) {
@@ -172,7 +179,65 @@ export class BeeRaceScene extends Phaser.Scene {
 
     const deltaSeconds = Math.min(delta / 1000, 0.05);
     const allBees = [...this.colonies.values()].flat();
-    for (const bee of allBees) this.updateBee(bee, allBees, time, delta, deltaSeconds);
+    const collectiveSignals = this.collectiveSignalsForColonies(time);
+    for (const bee of allBees) {
+      this.updateBee(
+        bee,
+        allBees,
+        collectiveSignals.get(bee.participantId),
+        time,
+        delta,
+        deltaSeconds,
+      );
+    }
+  }
+
+  private collectiveSignalsForColonies(time: number) {
+    const signals = new Map<string, CollectiveSignal>();
+    const flower = this.flower;
+    if (!flower || this.flowerMoving) {
+      for (const bees of this.colonies.values()) {
+        bees.forEach((bee) => bee.signalRing.setVisible(false));
+      }
+      return signals;
+    }
+
+    for (const [participantId, bees] of this.colonies) {
+      const participant = this.participants.get(participantId);
+      if (!participant) continue;
+      const signal = selectCollectiveSignal(
+        bees.map((bee) => ({
+          id: bee.id,
+          x: bee.root.x,
+          y: bee.root.y,
+          distance: Phaser.Math.Distance.Between(
+            bee.root.x,
+            bee.root.y,
+            flower.x,
+            flower.y,
+          ),
+        })),
+        participant.intelligence,
+        this.collectiveGuides.get(participantId),
+      );
+
+      if (signal) {
+        signals.set(participantId, signal);
+        this.collectiveGuides.set(participantId, signal.guideId);
+      } else {
+        this.collectiveGuides.delete(participantId);
+      }
+
+      bees.forEach((bee) => {
+        const isGuide = signal?.guideId === bee.id;
+        bee.signalRing.setVisible(isGuide);
+        if (isGuide) {
+          const pulse = (Math.sin(time * 0.008 + bee.phase) + 1) / 2;
+          bee.signalRing.setScale(0.9 + pulse * 0.28).setAlpha(0.42 + pulse * 0.38);
+        }
+      });
+    }
+    return signals;
   }
 
   private createBee(participant: Participant, index: number): BeeAgent {
@@ -192,6 +257,10 @@ export class BeeRaceScene extends Phaser.Scene {
     const eyeTwo = this.add.circle(13, 4, 2.4, 0x17231b);
     body.add([shadow, wingLeft, wingRight, bodyShape, stripeLeft, stripeRight, eye, eyeTwo]);
 
+    const signalRing = this.add
+      .circle(0, 0, 27, Phaser.Display.Color.HexStringToColor(participant.color).color, 0.08)
+      .setStrokeStyle(2, stripeColor, 0.8)
+      .setVisible(false);
     const badge = this.add.circle(0, -29, 15, 0xffffff, 0.95).setStrokeStyle(2, stripeColor, 0.6);
     const icon = this.add
       .text(0, -29, getEmojiSlot(participant.emojiSlot)?.emoji ?? '🐝', {
@@ -201,7 +270,7 @@ export class BeeRaceScene extends Phaser.Scene {
       .setOrigin(0.5);
     const progressTrack = this.add.rectangle(-15, -47, 30, 4, 0x173c25, 0.18).setOrigin(0, 0.5);
     const progressFill = this.add.rectangle(-15, -47, 30, 4, 0xf2b72c, 1).setOrigin(0, 0.5).setScale(0, 1);
-    root.add([body, badge, icon, progressTrack, progressFill]);
+    root.add([signalRing, body, badge, icon, progressTrack, progressFill]);
 
     const genome = createGenome(participant.intelligence);
     const id = `${participant.id}-bee-${index}-${Math.random().toString(16).slice(2)}`;
@@ -213,6 +282,7 @@ export class BeeRaceScene extends Phaser.Scene {
       bodyShape,
       stripeLeft,
       stripeRight,
+      signalRing,
       badge,
       icon,
       progressTrack,
@@ -248,6 +318,7 @@ export class BeeRaceScene extends Phaser.Scene {
     bee.bodyShape.setFillStyle(fill);
     bee.stripeLeft.setFillStyle(contrast);
     bee.stripeRight.setFillStyle(contrast);
+    bee.signalRing.setFillStyle(fill, 0.08).setStrokeStyle(2, contrast, 0.8);
     bee.badge.setStrokeStyle(2, contrast, 0.6);
     bee.icon.setText(getEmojiSlot(participant.emojiSlot)?.emoji ?? '🐝');
   }
@@ -255,6 +326,7 @@ export class BeeRaceScene extends Phaser.Scene {
   private updateBee(
     bee: BeeAgent,
     allBees: readonly BeeAgent[],
+    collectiveSignal: CollectiveSignal | undefined,
     time: number,
     deltaMs: number,
     deltaSeconds: number,
@@ -294,7 +366,22 @@ export class BeeRaceScene extends Phaser.Scene {
       bee.estimatedTarget.y - bee.root.y,
     );
     if (desired.lengthSq() > 0.001) desired.normalize();
-    const wanderStrength = bee.genome.exploration * 0.72;
+    const followsGuide = Boolean(
+      !recognizesFlower && collectiveSignal && collectiveSignal.guideId !== bee.id,
+    );
+    const collectiveStrength = followsGuide ? collectiveSignal?.strength ?? 0 : 0;
+    if (followsGuide && collectiveSignal) {
+      const sharedDirection = new Phaser.Math.Vector2(
+        collectiveSignal.targetX - bee.root.x,
+        collectiveSignal.targetY - bee.root.y,
+      );
+      if (sharedDirection.lengthSq() > 0.001) {
+        desired
+          .scale(1 - collectiveStrength)
+          .add(sharedDirection.normalize().scale(collectiveStrength));
+      }
+    }
+    const wanderStrength = bee.genome.exploration * 0.72 * (1 - collectiveStrength * 0.72);
     desired.x += Math.sin(time * 0.0015 + bee.phase) * wanderStrength;
     desired.y += Math.cos(time * 0.0012 + bee.phase * 1.3) * wanderStrength;
     if (!recognizesFlower && flowerDistance < SEARCH_FLOWER_CLEARANCE * 2) {
@@ -434,6 +521,7 @@ export class BeeRaceScene extends Phaser.Scene {
   private moveFlower() {
     if (!this.flower) return;
     this.flowerMoving = true;
+    this.collectiveGuides.clear();
     for (const bees of this.colonies.values()) {
       bees.forEach((bee) => {
         bee.harvestProgress = 0;

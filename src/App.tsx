@@ -147,6 +147,7 @@ export function App() {
               <i className="footer-dot brain-dot" />
               Equilibrada para ~3–6 min con el máximo de {REFERENCE_EXPERT_BEE_COUNT} abejas expertas
             </span>
+            <span><i className="footer-dot signal-dot" />El aro pulsante marca la guía de cada colonia</span>
           </div>
         </section>
       </main>

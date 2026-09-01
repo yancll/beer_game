@@ -100,7 +100,7 @@ export function ControlPanel({
         {submitted && validation.errors.name && <p className="field-error">{validation.errors.name}</p>}
 
         <fieldset className="emoji-picker">
-          <legend>Selecciona un número</legend>
+          <legend>Selecciona un emoji</legend>
           <div className="emoji-picker-grid">
             {EMOJI_SLOTS.map((slot) => {
               const owner = participants.find(
@@ -115,10 +115,9 @@ export function ControlPanel({
                   data-selected={selected || undefined}
                   disabled={Boolean(owner)}
                   aria-pressed={selected}
-                  aria-label={`${slot.number}, ${slot.label}${owner ? `, asignado a ${owner.name}` : ''}`}
+                  aria-label={`${slot.label}${owner ? `, asignado a ${owner.name}` : ''}`}
                   onClick={() => setDraft((current) => ({ ...current, emojiSlot: slot.number }))}
                 >
-                  <span className="emoji-choice-number">{slot.number}</span>
                   <span aria-hidden="true">{slot.emoji}</span>
                 </button>
               );

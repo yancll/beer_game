@@ -16,7 +16,7 @@ export function IdentityPanel({ participants, onEdit, onRemove }: IdentityPanelP
           <h2 id="identity-panel-title">Identidades y configuración</h2>
         </div>
       </div>
-      <p className="identity-note">Cada número conserva su emoji, nombre y configuración.</p>
+      <p className="identity-note">Cada emoji identifica a una colonia y conserva su configuración.</p>
       <div className="participant-list identity-list">
         {EMOJI_SLOTS.map((slot) => {
           const participant = participants.find((current) => current.emojiSlot === slot.number);
@@ -34,7 +34,6 @@ export function IdentityPanel({ participants, onEdit, onRemove }: IdentityPanelP
                     aria-label={`Editar a ${participant.name}`}
                     onClick={() => onEdit(participant.id)}
                   >
-                    <span className="identity-number">{slot.number}</span>
                     <span
                       className="participant-color"
                       style={{ backgroundColor: participant.color }}
@@ -58,9 +57,8 @@ export function IdentityPanel({ participants, onEdit, onRemove }: IdentityPanelP
               ) : (
                 <div
                   className="identity-empty-row"
-                  aria-label={`${slot.number}, ${slot.label}, disponible`}
+                  aria-label={`${slot.label}, disponible`}
                 >
-                  <span className="identity-number">{slot.number}</span>
                   <span className="identity-available-dot" aria-hidden="true" />
                   <span className="participant-row-emoji" aria-hidden="true">{slot.emoji}</span>
                   <span>

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { EMOJI_SLOTS, getEmojiSlot } from './emojiSlots';
 
 describe('emoji slots', () => {
-  it('provides ten unique numbered identities', () => {
+  it('provides ten unique emoji identities', () => {
     expect(EMOJI_SLOTS).toHaveLength(10);
     expect(new Set(EMOJI_SLOTS.map((slot) => slot.number)).size).toBe(10);
     expect(new Set(EMOJI_SLOTS.map((slot) => slot.emoji)).size).toBe(10);
