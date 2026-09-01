@@ -6,11 +6,13 @@ import {
   type BeeEvaluation,
   type BeeGenome,
 } from '../domain/evolution';
+import { projectOutsideCircle } from '../domain/flowerAvoidance';
 import { sampleDiscoveryDelayMs } from '../domain/raceBalance';
 import type { Participant } from '../domain/types';
 
 const HARVEST_DURATION_MS = 6000;
-const HARVEST_RADIUS = 24;
+const HARVEST_RADIUS = 18;
+const SEARCH_FLOWER_CLEARANCE = 46;
 const EDGE_MARGIN = 38;
 const BASE_SPEED = 70;
 
@@ -295,6 +297,15 @@ export class BeeRaceScene extends Phaser.Scene {
     const wanderStrength = bee.genome.exploration * 0.72;
     desired.x += Math.sin(time * 0.0015 + bee.phase) * wanderStrength;
     desired.y += Math.cos(time * 0.0012 + bee.phase * 1.3) * wanderStrength;
+    if (!recognizesFlower && flowerDistance < SEARCH_FLOWER_CLEARANCE * 2) {
+      const away = new Phaser.Math.Vector2(
+        bee.root.x - this.flower.x,
+        bee.root.y - this.flower.y,
+      );
+      if (away.lengthSq() < 0.001) away.set(Math.cos(bee.phase), Math.sin(bee.phase));
+      const avoidanceStrength = 2.4 * (1 - flowerDistance / (SEARCH_FLOWER_CLEARANCE * 2));
+      desired.add(away.normalize().scale(avoidanceStrength));
+    }
     desired.normalize().scale(BASE_SPEED);
 
     const responsiveness = Phaser.Math.Linear(0.045, 0.125, 1 - bee.genome.inertia);
@@ -306,11 +317,18 @@ export class BeeRaceScene extends Phaser.Scene {
     bee.root.x += bee.velocity.x * deltaSeconds;
     bee.root.y += bee.velocity.y * deltaSeconds;
     this.bounceInsideArena(bee);
+    if (!recognizesFlower) this.keepSearchingBeeOutsideFlower(bee, time);
     bee.evaluation.pathDistance += Phaser.Math.Distance.Between(previousX, previousY, bee.root.x, bee.root.y);
     bee.body.rotation = Math.atan2(bee.velocity.y, bee.velocity.x);
     bee.body.setScale(1, 1 + Math.sin(time * 0.025 + bee.phase) * 0.035);
 
-    if (recognizesFlower && flowerDistance <= HARVEST_RADIUS && !this.flowerMoving) {
+    const currentFlowerDistance = Phaser.Math.Distance.Between(
+      bee.root.x,
+      bee.root.y,
+      this.flower.x,
+      this.flower.y,
+    );
+    if (recognizesFlower && currentFlowerDistance <= HARVEST_RADIUS && !this.flowerMoving) {
       bee.harvestProgress = Math.min(1, bee.harvestProgress + deltaMs / HARVEST_DURATION_MS);
       bee.velocity.scale(0.982);
     } else {
@@ -353,30 +371,51 @@ export class BeeRaceScene extends Phaser.Scene {
     bee.root.y = Phaser.Math.Clamp(bee.root.y, EDGE_MARGIN, maxY);
   }
 
+  private keepSearchingBeeOutsideFlower(bee: BeeAgent, time: number) {
+    if (!this.flower) return;
+    const projection = projectOutsideCircle(
+      { x: bee.root.x, y: bee.root.y },
+      { x: this.flower.x, y: this.flower.y },
+      SEARCH_FLOWER_CLEARANCE,
+      bee.phase,
+    );
+    if (!projection.displaced) return;
+
+    bee.root.setPosition(projection.x, projection.y);
+    const inwardSpeed =
+      bee.velocity.x * projection.normalX + bee.velocity.y * projection.normalY;
+    if (inwardSpeed < 0) {
+      bee.velocity.x -= projection.normalX * inwardSpeed * 1.8;
+      bee.velocity.y -= projection.normalY * inwardSpeed * 1.8;
+    }
+    bee.estimatedTarget.copy(this.randomBeePosition());
+    bee.targetRefreshAt = time + 1800;
+  }
+
   private createFlower(): Phaser.GameObjects.Container {
     const flower = this.add.container(0, 0).setDepth(3);
-    const halo = this.add.circle(0, 0, 31, 0xf8d76b, 0.12);
-    const stem = this.add.rectangle(0, 19, 5, 34, 0x4f9158).setOrigin(0.5, 0);
-    const leafLeft = this.add.ellipse(-9, 31, 17, 8, 0x69a85f).setRotation(-0.5);
-    const leafRight = this.add.ellipse(9, 39, 17, 8, 0x69a85f).setRotation(0.5);
+    const halo = this.add.circle(0, 0, 23, 0xf8d76b, 0.11);
+    const stem = this.add.rectangle(0, 14, 4, 27, 0x4f9158).setOrigin(0.5, 0);
+    const leafLeft = this.add.ellipse(-7, 24, 13, 6, 0x69a85f).setRotation(-0.5);
+    const leafRight = this.add.ellipse(7, 31, 13, 6, 0x69a85f).setRotation(0.5);
     flower.add([halo, stem, leafLeft, leafRight]);
     for (let index = 0; index < 10; index += 1) {
       const angle = (index / 10) * Math.PI * 2;
       const petal = this.add
-        .ellipse(Math.cos(angle) * 14, Math.sin(angle) * 14, 20, 10, 0xfff8ee)
+        .ellipse(Math.cos(angle) * 10, Math.sin(angle) * 10, 15, 8, 0xfff8ee)
         .setRotation(angle);
       flower.add(petal);
     }
-    flower.add(this.add.circle(0, 0, 10, 0xf5bd32).setStrokeStyle(2, 0xe29b1d, 0.55));
+    flower.add(this.add.circle(0, 0, 7, 0xf5bd32).setStrokeStyle(2, 0xe29b1d, 0.55));
     flower.add(
       this.add
-        .text(0, -39, 'META', {
+        .text(0, -31, 'META', {
           color: '#24472c',
           backgroundColor: '#ffffffdd',
           fontFamily: 'Inter, system-ui, sans-serif',
-          fontSize: '9px',
+          fontSize: '8px',
           fontStyle: 'bold',
-          padding: { x: 5, y: 3 },
+          padding: { x: 4, y: 2 },
         })
         .setOrigin(0.5),
     );
