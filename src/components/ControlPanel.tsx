@@ -236,8 +236,8 @@ export function ControlPanel({
           id="flower-time"
           className="range-input"
           type="range"
-          min="10"
-          max="24"
+          min="30"
+          max="60"
           value={flowerMoveSeconds}
           onChange={(event) => onFlowerMoveSecondsChange(Number(event.target.value))}
         />

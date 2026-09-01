@@ -33,9 +33,18 @@ test('adds, updates and automatically removes a winner', async ({ page }) => {
   await page.getByRole('button', { name: 'Guardar cambios' }).click();
   await expect(page.locator('.participant-edit', { hasText: 'Ana' })).toContainText('5 abejas · inteligencia 5');
 
+  await page.getByLabel('Nombre').fill('Luis');
+  await page.getByRole('button', { name: /^2, Arcoíris/ }).click();
+  await setRange(page.getByLabel('Cantidad de abejas'), 2);
+  await setRange(page.getByLabel('Inteligencia'), 4);
+  await page.getByRole('button', { name: 'Añadir participante' }).click();
+  await expect(page.locator('.participant-edit', { hasText: 'Luis' })).toContainText('2 abejas · inteligencia 4');
+
   const participantId = await page.evaluate(() => {
     const stored = localStorage.getItem('beer-game:participants:v1');
-    return (JSON.parse(stored ?? '[]') as Array<{ id: string }>)[0]?.id;
+    return (JSON.parse(stored ?? '[]') as Array<{ id: string; name: string }>).find(
+      (participant) => participant.name === 'Ana',
+    )?.id;
   });
   await page.evaluate((id) => {
     window.dispatchEvent(
@@ -45,8 +54,10 @@ test('adds, updates and automatically removes a winner', async ({ page }) => {
 
   await expect(page.getByRole('dialog')).toContainText('Victoria de Ana');
   await expect(page.locator('.roster-name', { hasText: 'Ana' })).toHaveCount(0);
+  await expect(page.locator('.roster-name', { hasText: 'Luis' })).toBeVisible();
   await expect(page.getByRole('dialog')).toBeHidden({ timeout: 5000 });
-  await expect(page.getByText('La carrera está lista')).toBeVisible();
+  await expect(page.locator('.participant-edit', { hasText: 'Luis' })).toBeVisible();
+  await expect(page.locator('canvas')).toBeVisible();
 });
 
 test('keeps all controls usable on a mobile-sized screen', async ({ page }) => {

@@ -4,6 +4,7 @@ import { EmojiRoster } from './components/EmojiRoster';
 import { EmptyArena } from './components/EmptyArena';
 import { VictoryOverlay } from './components/VictoryOverlay';
 import { resolveWinner } from './domain/gameRound';
+import { REFERENCE_EXPERT_BEE_COUNT } from './domain/raceBalance';
 import {
   parseStoredParticipants,
   removeParticipant,
@@ -18,7 +19,7 @@ const VICTORY_DURATION_MS = 3200;
 
 function loadFlowerMoveSeconds(): number {
   const stored = Number(localStorage.getItem(FLOWER_TIME_STORAGE_KEY));
-  return Number.isFinite(stored) && stored >= 10 && stored <= 24 ? stored : 14;
+  return Number.isFinite(stored) && stored >= 30 && stored <= 60 ? stored : 40;
 }
 
 export function App() {
@@ -117,7 +118,7 @@ export function App() {
               <span>En vivo</span>
             </div>
             <h2 id="arena-title">Jardín de competencia</h2>
-            <p>Para ganar, una abeja debe permanecer en la flor hasta llenar su barra de néctar.</p>
+            <p>Primero debe localizar la flor y después permanecer en ella hasta llenar su barra de néctar.</p>
           </div>
           <div className="game-frame">
             <PhaserGame
@@ -131,7 +132,10 @@ export function App() {
           </div>
           <div className="arena-footer">
             <span><i className="footer-dot flower-dot" />La flor cambia cada {flowerMoveSeconds} segundos</span>
-            <span><i className="footer-dot brain-dot" />Las colonias ajustan su estrategia en cada cambio</span>
+            <span>
+              <i className="footer-dot brain-dot" />
+              Equilibrada para ~5–10 min incluso con {REFERENCE_EXPERT_BEE_COUNT} abejas expertas
+            </span>
           </div>
         </section>
 

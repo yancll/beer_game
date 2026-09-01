@@ -6,12 +6,13 @@ import {
   type BeeEvaluation,
   type BeeGenome,
 } from '../domain/evolution';
+import { sampleDiscoveryDelayMs } from '../domain/raceBalance';
 import type { Participant } from '../domain/types';
 
-const HARVEST_DURATION_MS = 2400;
-const HARVEST_RADIUS = 48;
-const EDGE_MARGIN = 44;
-const BASE_SPEED = 82;
+const HARVEST_DURATION_MS = 6000;
+const HARVEST_RADIUS = 24;
+const EDGE_MARGIN = 38;
+const BASE_SPEED = 70;
 
 interface BeeAgent {
   id: string;
@@ -28,6 +29,9 @@ interface BeeAgent {
   velocity: Phaser.Math.Vector2;
   estimatedTarget: Phaser.Math.Vector2;
   targetRefreshAt: number;
+  searchStartedAt: number;
+  discoverySample: number;
+  searchUnlockAt: number;
   phase: number;
   harvestProgress: number;
   genome: BeeGenome;
@@ -97,6 +101,13 @@ export class BeeRaceScene extends Phaser.Scene {
         bees.forEach((bee) => {
           bee.genome = createGenome(participant.intelligence);
           bee.evaluation.genome = bee.genome;
+          bee.searchUnlockAt = Math.min(
+            bee.searchUnlockAt,
+            bee.searchStartedAt + sampleDiscoveryDelayMs(
+              participant.intelligence,
+              () => bee.discoverySample,
+            ),
+          );
         });
       }
       if (
@@ -164,6 +175,8 @@ export class BeeRaceScene extends Phaser.Scene {
 
   private createBee(participant: Participant, index: number): BeeAgent {
     const spawn = this.randomBeePosition();
+    const searchStartedAt = this.time.now;
+    const discoverySample = Math.random();
     const root = this.add.container(spawn.x, spawn.y).setDepth(5);
     const body = this.add.container(0, 0);
     const shadow = this.add.ellipse(2, 8, 31, 12, 0x173c25, 0.16);
@@ -206,8 +219,14 @@ export class BeeRaceScene extends Phaser.Scene {
         Phaser.Math.FloatBetween(-1, 1),
         Phaser.Math.FloatBetween(-1, 1),
       ).normalize().scale(BASE_SPEED * 0.45),
-      estimatedTarget: new Phaser.Math.Vector2(this.flower?.x ?? spawn.x, this.flower?.y ?? spawn.y),
+      estimatedTarget: this.randomBeePosition(),
       targetRefreshAt: 0,
+      searchStartedAt,
+      discoverySample,
+      searchUnlockAt: searchStartedAt + sampleDiscoveryDelayMs(
+        participant.intelligence,
+        () => discoverySample,
+      ),
       phase: Phaser.Math.FloatBetween(0, Math.PI * 2),
       harvestProgress: 0,
       genome,
@@ -243,8 +262,9 @@ export class BeeRaceScene extends Phaser.Scene {
 
     const flowerDistance = Phaser.Math.Distance.Between(bee.root.x, bee.root.y, this.flower.x, this.flower.y);
     bee.evaluation.closestDistance = Math.min(bee.evaluation.closestDistance, flowerDistance);
+    const recognizesFlower = time >= bee.searchUnlockAt;
 
-    if (time >= bee.targetRefreshAt || flowerDistance < 150) {
+    if (recognizesFlower && (time >= bee.targetRefreshAt || flowerDistance < 150)) {
       const precision = bee.genome.directness * (1 - bee.genome.sensorNoise * 0.5);
       const errorRadius = Phaser.Math.Linear(118, 8, precision);
       bee.estimatedTarget.set(
@@ -253,6 +273,18 @@ export class BeeRaceScene extends Phaser.Scene {
       );
       const refreshDelay = Phaser.Math.Linear(1550, 220, precision);
       bee.targetRefreshAt = time + refreshDelay;
+    } else if (
+      !recognizesFlower &&
+      (time >= bee.targetRefreshAt || Phaser.Math.Distance.Between(
+        bee.root.x,
+        bee.root.y,
+        bee.estimatedTarget.x,
+        bee.estimatedTarget.y,
+      ) < 55)
+    ) {
+      bee.estimatedTarget.copy(this.randomBeePosition());
+      const skill = participant.intelligence / 5;
+      bee.targetRefreshAt = time + Phaser.Math.Linear(5600, 3200, skill);
     }
 
     const desired = new Phaser.Math.Vector2(
@@ -278,7 +310,7 @@ export class BeeRaceScene extends Phaser.Scene {
     bee.body.rotation = Math.atan2(bee.velocity.y, bee.velocity.x);
     bee.body.setScale(1, 1 + Math.sin(time * 0.025 + bee.phase) * 0.035);
 
-    if (flowerDistance <= HARVEST_RADIUS && !this.flowerMoving) {
+    if (recognizesFlower && flowerDistance <= HARVEST_RADIUS && !this.flowerMoving) {
       bee.harvestProgress = Math.min(1, bee.harvestProgress + deltaMs / HARVEST_DURATION_MS);
       bee.velocity.scale(0.982);
     } else {
@@ -323,28 +355,28 @@ export class BeeRaceScene extends Phaser.Scene {
 
   private createFlower(): Phaser.GameObjects.Container {
     const flower = this.add.container(0, 0).setDepth(3);
-    const halo = this.add.circle(0, 0, 53, 0xf8d76b, 0.14);
-    const stem = this.add.rectangle(0, 31, 7, 48, 0x4f9158).setOrigin(0.5, 0);
-    const leafLeft = this.add.ellipse(-13, 47, 25, 12, 0x69a85f).setRotation(-0.5);
-    const leafRight = this.add.ellipse(13, 58, 25, 12, 0x69a85f).setRotation(0.5);
+    const halo = this.add.circle(0, 0, 31, 0xf8d76b, 0.12);
+    const stem = this.add.rectangle(0, 19, 5, 34, 0x4f9158).setOrigin(0.5, 0);
+    const leafLeft = this.add.ellipse(-9, 31, 17, 8, 0x69a85f).setRotation(-0.5);
+    const leafRight = this.add.ellipse(9, 39, 17, 8, 0x69a85f).setRotation(0.5);
     flower.add([halo, stem, leafLeft, leafRight]);
     for (let index = 0; index < 10; index += 1) {
       const angle = (index / 10) * Math.PI * 2;
       const petal = this.add
-        .ellipse(Math.cos(angle) * 24, Math.sin(angle) * 24, 34, 17, 0xfff8ee)
+        .ellipse(Math.cos(angle) * 14, Math.sin(angle) * 14, 20, 10, 0xfff8ee)
         .setRotation(angle);
       flower.add(petal);
     }
-    flower.add(this.add.circle(0, 0, 17, 0xf5bd32).setStrokeStyle(3, 0xe29b1d, 0.55));
+    flower.add(this.add.circle(0, 0, 10, 0xf5bd32).setStrokeStyle(2, 0xe29b1d, 0.55));
     flower.add(
       this.add
-        .text(0, -58, 'META', {
+        .text(0, -39, 'META', {
           color: '#24472c',
           backgroundColor: '#ffffffdd',
           fontFamily: 'Inter, system-ui, sans-serif',
-          fontSize: '11px',
+          fontSize: '9px',
           fontStyle: 'bold',
-          padding: { x: 7, y: 4 },
+          padding: { x: 5, y: 3 },
         })
         .setOrigin(0.5),
     );
@@ -475,18 +507,18 @@ export class BeeRaceScene extends Phaser.Scene {
 
   private keepObjectsInsideArena() {
     if (this.flower) {
-      this.flower.x = Phaser.Math.Clamp(this.flower.x, 90, Math.max(90, this.scale.width - 90));
-      this.flower.y = Phaser.Math.Clamp(this.flower.y, 95, Math.max(95, this.scale.height - 95));
+      this.flower.x = Phaser.Math.Clamp(this.flower.x, 70, Math.max(70, this.scale.width - 70));
+      this.flower.y = Phaser.Math.Clamp(this.flower.y, 78, Math.max(78, this.scale.height - 78));
     }
     for (const bees of this.colonies.values()) bees.forEach((bee) => this.bounceInsideArena(bee));
   }
 
   private randomFlowerPosition() {
-    const maxX = Math.max(100, this.scale.width - 100);
-    const maxY = Math.max(110, this.scale.height - 110);
+    const maxX = Math.max(76, this.scale.width - 76);
+    const maxY = Math.max(84, this.scale.height - 84);
     return new Phaser.Math.Vector2(
-      Phaser.Math.Between(100, maxX),
-      Phaser.Math.Between(110, maxY),
+      Phaser.Math.Between(76, maxX),
+      Phaser.Math.Between(84, maxY),
     );
   }
 

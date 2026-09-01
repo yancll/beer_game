@@ -40,7 +40,7 @@ button:focus-visible, input:focus-visible {
 }
 
 .app-shell {
-  width: min(1760px, 100%);
+  width: min(1920px, 100%);
   margin: 0 auto;
   padding: 24px;
 }
@@ -102,7 +102,7 @@ button:focus-visible, input:focus-visible {
 
 .workspace-grid {
   display: grid;
-  grid-template-columns: 310px minmax(500px, 1fr) 230px;
+  grid-template-columns: 300px minmax(620px, 1fr) 220px;
   gap: 16px;
   align-items: start;
 }
@@ -234,7 +234,7 @@ button:focus-visible, input:focus-visible {
 .arena-heading h2 { grid-column: 2; grid-row: 1; font-size: 1.45rem; }
 .arena-heading p { grid-column: 1 / -1; margin: 5px 0 0; color: var(--muted); font-size: 0.78rem; }
 .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #5ca762; box-shadow: 0 0 0 5px rgba(92, 167, 98, 0.14); }
-.game-frame { position: relative; min-height: 650px; overflow: hidden; border-radius: 18px; background: #e8f5df; }
+.game-frame { position: relative; height: clamp(720px, 76vh, 920px); overflow: hidden; border-radius: 18px; background: #e8f5df; }
 .phaser-host { position: absolute; inset: 0; }
 .phaser-host canvas { display: block; width: 100% !important; height: 100% !important; }
 .empty-arena {
@@ -335,7 +335,7 @@ button:focus-visible, input:focus-visible {
   .arena-panel { grid-row: 1; }
   .control-panel { grid-row: 2; }
   .emoji-roster { grid-row: 3; }
-  .game-frame { min-height: 560px; }
+  .game-frame { height: 620px; }
   .roster-list { grid-template-columns: 1fr 1fr; }
 }
 
@@ -349,7 +349,7 @@ button:focus-visible, input:focus-visible {
   .arena-panel { padding: 9px; }
   .arena-heading { grid-template-columns: 1fr; }
   .arena-heading h2, .arena-heading p { grid-column: 1; grid-row: auto; }
-  .game-frame { min-height: 500px; border-radius: 14px; }
+  .game-frame { height: 560px; border-radius: 14px; }
   .roster-list { grid-template-columns: 1fr; }
   .victory-card { padding-inline: 18px; }
 }
